@@ -88,8 +88,6 @@ module Sift
       @api_key = api_key
       @path = path
       @timeout = timeout
-
-
     end
 
     def api_key
@@ -132,15 +130,23 @@ module Sift
     #   the status message and status code. In general, you can ignore the returned
     #   result, though.
     #
-    def track(event, properties = {}, timeout = nil, path = nil, return_score = false, api_key = @api_key)
+    def track(event, properties = {}, timeout = nil, path = nil, return_score = false, return_action = false, api_key = @api_key)
       raise("event must be a non-empty string") if (!event.is_a? String) || event.empty?
       raise("properties cannot be empty") if properties.empty?
       raise("Bad api_key parameter") if api_key.empty?
       path ||= @path
       timeout ||= @timeout
+      returns = []
       if return_score
-        path = path + "?return_score=true"
+        returns << "return_score=true"
       end
+
+      if return_action
+        returns << "return_action=true"
+      end
+
+      path += "?#{returns.join('&')}"
+
       options = {
         :body => MultiJson.dump(delete_nils(properties).merge({"$type" => event,
                                                                "$api_key" => api_key})),
@@ -207,7 +213,7 @@ module Sift
       raise("user_id must be a non-empty string") if (!user_id.is_a? String) || user_id.to_s.empty?
 
       path = Sift.current_users_label_api_path(user_id)
-      track("$label", delete_nils(properties), timeout, path, false, api_key)
+      track("$label", delete_nils(properties), timeout, path, false, false, api_key)
     end
 
     # Unlabels a user.  This call is blocking.
