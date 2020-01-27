@@ -1,5 +1,6 @@
 require 'httparty'
 require 'multi_json'
+require 'base64'
 
 module Sift
 
@@ -240,6 +241,26 @@ module Sift
       path = Sift.current_users_label_api_path(user_id)
       response = self.class.delete(path + "?api_key=#{@api_key}", options)
       Response.new(response.body, response.code, response.response)
+    end
+
+    def create_decision(api_key, account_id, user_id, order_id, body)
+      options = {
+        :headers => {
+          "Content-Type" => "application/json",
+          "authorization" => "Basic #{Base64.encode64("#{api_key}:")}",
+        },
+        :body => MultiJson.dump(body)
+      }
+      path = "https://api.sift.com/v3/accounts/#{account_id}/users/#{user_id}/orders/#{order_id}/decisions"
+
+      begin
+        response = self.class.post(path, options)
+        Response.new(response.body, response.code, response.response)
+      rescue StandardError => e
+        Sift.warn("Failed to create decision: " + e.to_s)
+        Sift.warn(e.backtrace)
+        nil
+      end
     end
 
     private
