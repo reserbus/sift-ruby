@@ -136,7 +136,7 @@ module Sift
       raise("Bad api_key parameter") if api_key.empty?
       path ||= @path
       timeout ||= @timeout
-      returns = ["return_workflow_status=true", "abuse_types=payment_abuse"]
+      returns = ["return_workflow_status=true", "abuse_types=legacy"]
       if return_score
         returns << "return_score=true"
       end
